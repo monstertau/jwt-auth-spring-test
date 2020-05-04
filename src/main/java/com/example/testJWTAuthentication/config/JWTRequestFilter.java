@@ -1,12 +1,12 @@
-package com.example.testJWTAuthentication.filter;
+package com.example.testJWTAuthentication.config;
 
 import com.example.testJWTAuthentication.Services.MyUserDetailsService;
 import com.example.testJWTAuthentication.util.JWTUtil;
+import com.example.testJWTAuthentication.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -25,6 +25,9 @@ public class JWTRequestFilter extends OncePerRequestFilter {
 
     @Autowired
     private JWTUtil jwtUtil;
+
+    @Autowired
+    private RedisUtil redisUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -46,7 +49,7 @@ public class JWTRequestFilter extends OncePerRequestFilter {
 
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-            if (jwtUtil.validateToken(jwt, userDetails)) {
+            if (jwtUtil.validateToken(jwt, userDetails) && !redisUtil.checkBlackListToken(jwt)) {
 
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
